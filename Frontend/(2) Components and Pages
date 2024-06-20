@@ -1,0 +1,255 @@
+import React, { useContext } from 'react';
+import { Link } from 'react-router-dom';
+import { AuthContext } from '../context/AuthContext';
+
+const Navbar = () => {
+    const { auth, logout } = useContext(AuthContext);
+
+    return (
+        <nav className="navbar navbar-expand-lg navbar-light bg-light">
+            <Link className="navbar-brand" to="/">Real Estate</Link>
+            <div className="collapse navbar-collapse">
+                <ul className="navbar-nav ml-auto">
+                    {!auth.isAuthenticated ? (
+                        <>
+                            <li className="nav-item">
+                                <Link className="nav-link" to="/login">Login</Link>
+                            </li>
+                            <li className="nav-item">
+                                <Link className="nav-link" to="/register">Register</Link>
+                            </li>
+                        </>
+                    ) : (
+                        <>
+                            <li className="nav-item">
+                                <Link className="nav-link" to="/add-property">Add Property</Link>
+                            </li>
+                            <li className="nav-item">
+                                <button className="nav-link btn btn-link" onClick={logout}>Logout</button>
+                            </li>
+                        </>
+                    )}
+                </ul>
+            </div>
+        </nav>
+    );
+};
+
+export default Navbar;
+
+
+
+
+import React, { useEffect, useState } from 'react';
+import { fetchProperties } from '../services/api';
+import { Link } from 'react-router-dom';
+
+const Home = () => {
+    const [properties, setProperties] = useState([]);
+
+    useEffect(() => {
+        fetchProperties().then(response => setProperties(response.data));
+    }, []);
+
+    return (
+        <div className="container">
+            <h1 className="my-4">Real Estate Listings</h1>
+            <div className="row">
+                {properties.map(property => (
+                    <div key={property._id} className="col-lg-4 col-md-6 mb-4">
+                        <div className="card">
+                            <div className="card-body">
+                                <h5 className="card-title">{property.title}</h5>
+                                <p className="card-text">{property.description}</p>
+                                <p className="card-text"><strong>Price:</strong> ${property.price}</p>
+                                <Link to={`/property/${property._id}`} className="btn btn-primary">View Details</Link>
+                            </div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+};
+
+export default Home;
+
+
+
+
+import React, { useState } from 'react';
+import { useHistory } from 'react-router-dom';
+import { registerUser } from '../services/api';
+
+const Register = () => {
+    const [formData, setFormData] = useState({ name: '', email: '', password: '' });
+    const history = useHistory();
+
+    const handleChange = (e) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        registerUser(formData).then(() => {
+            history.push('/login');
+        });
+    };
+
+    return (
+        <div className="container">
+            <h1 className="my-4">Register</h1>
+            <form onSubmit={handleSubmit}>
+                <div className="form-group">
+                    <label>Name</label>
+                    <input type="text" name="name" className="form-control" value={formData.name} onChange={handleChange} required />
+                </div>
+                <div className="form-group">
+                    <label>Email</label>
+                    <input type="email" name="email" className="form-control" value={formData.email} onChange={handleChange} required />
+                </div>
+                <div className="form-group">
+                    <label>Password</label>
+                    <input type="password" name="password" className="form-control" value={formData.password} onChange={handleChange} required />
+                </div>
+                <button type="submit" className="btn btn-primary">Register</button>
+            </form>
+        </div>
+    );
+};
+
+export default Register;
+
+
+
+
+import React, { useState, useContext } from 'react';
+import { useHistory } from 'react-router-dom';
+import { loginUser } from '../services/api';
+import { AuthContext } from '../context/AuthContext';
+
+const Login = () => {
+    const [formData, setFormData] = useState({ email: '', password: '' });
+    const { login } = useContext(AuthContext);
+    const history = useHistory();
+
+    const handleChange = (e) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        loginUser(formData).then((response) => {
+            login(response.data);
+            history.push('/');
+        });
+    };
+
+    return (
+        <div className="container">
+            <h1 className="my-4">Login</h1>
+            <form onSubmit={handleSubmit}>
+                <div className="form-group">
+                    <label>Email</label>
+                    <input type="email" name="email" className="form-control" value={formData.email} onChange={handleChange} required />
+                </div>
+                <div className="form-group">
+                    <label>Password</label>
+                    <input type="password" name="password" className="form-control" value={formData.password} onChange={handleChange} required />
+                </div>
+                <button type="submit" className="btn btn-primary">Login</button>
+            </form>
+        </div>
+    );
+};
+
+export default Login;
+
+
+
+
+
+import React, { useState } from 'react';
+import { useHistory } from 'react-router-dom';
+import { addProperty } from '../services/api';
+
+const AddProperty = () => {
+    const [formData, setFormData] = useState({ title: '', description: '', price: '', location: '' });
+    const history = useHistory();
+
+    const handleChange = (e) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        addProperty(formData).then(() => {
+            history.push('/');
+        });
+    };
+
+    return (
+        <div className="container">
+            <h1 className="my-4">Add Property</h1>
+            <form onSubmit={handleSubmit}>
+                <div className="form-group">
+                    <label>Title</label>
+                    <input type="text" name="title" className="form-control" value={formData.title} onChange={handleChange} required />
+                </div>
+                <div className="form-group">
+                    <label>Description</label>
+                    <textarea name="description" className="form-control" value={formData.description} onChange={handleChange} required></textarea>
+                </div>
+                <div className="form-group">
+                    <label>Price</label>
+                    <input type="number" name="price" className="form-control" value={formData.price} onChange={handleChange} required />
+                </div>
+                <div className="form-group">
+                    <label>Location</label>
+                    <input type="text" name="location" className="form-control" value={formData.location} onChange={handleChange} required />
+                </div>
+                <button type="submit" className="btn btn-primary">Add Property</button>
+            </form>
+        </div>
+    );
+};
+
+export default AddProperty;
+
+
+
+
+
+import React, { useEffect, useState } from 'react';
+import { fetchPropertyById } from '../services/api';
+import { useParams } from 'react-router-dom';
+
+const PropertyDetail = () => {
+    const [property, setProperty] = useState(null);
+    const { id } = useParams();
+
+    useEffect(() => {
+        fetchPropertyById(id).then(response => setProperty(response.data));
+    }, [id]);
+
+    return (
+        <div className="container">
+            {property ? (
+                <div>
+                    <h1 className="my-4">{property.title}</h1>
+                    <p>{property.description}</p>
+                    <p><strong>Price:</strong> ${property.price}</p>
+                    <p><strong>Location:</strong> {property.location}</p>
+                </div>
+            ) : (
+                <p>Loading...</p>
+            )}
+        </div>
+    );
+};
+
+export default PropertyDetail;
+
+
+
+

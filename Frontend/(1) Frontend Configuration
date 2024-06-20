@@ -1,0 +1,53 @@
+import axios from 'axios';
+
+const API = axios.create({ baseURL: 'http://localhost:5000/api' });
+
+// Add interceptor to include the token
+API.interceptors.request.use((req) => {
+    if (localStorage.getItem('token')) {
+        req.headers.Authorization = `Bearer ${localStorage.getItem('token')}`;
+    }
+    return req;
+});
+
+export const registerUser = (userData) => API.post('/users/register', userData);
+export const loginUser = (userData) => API.post('/users/login', userData);
+export const fetchProperties = () => API.get('/properties');
+export const fetchPropertyById = (id) => API.get(`/properties/${id}`);
+export const addProperty = (propertyData) => API.post('/properties/add', propertyData);
+
+
+
+import { createContext, useState } from 'react';
+
+export const AuthContext = createContext();
+
+const AuthProvider = ({ children }) => {
+    const [auth, setAuth] = useState({
+        isAuthenticated: false,
+        user: null,
+        token: localStorage.getItem('token')
+    });
+
+    const login = (userData) => {
+        localStorage.setItem('token', userData.token);
+        setAuth({ isAuthenticated: true, user: userData.user, token: userData.token });
+    };
+
+    const logout = () => {
+        localStorage.removeItem('token');
+        setAuth({ isAuthenticated: false, user: null, token: null });
+    };
+
+    return (
+        <AuthContext.Provider value={{ auth, login, logout }}>
+            {children}
+        </AuthContext.Provider>
+    );
+};
+
+export default AuthProvider;
+
+
+
+
